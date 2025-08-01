@@ -27,11 +27,19 @@ const sessionOptions = {
     secret: "some long and cool secret key",
     resave: false,
     saveUninitialized: false,
+    name: "session_id",
 }
 app.use(session(sessionOptions))
 
 app.post("/", (req, res) => {
-    console.log("---- body:", req.body)
+    const {userId, userPassword} = req.body
+    
+    // console.log("---- body:", userId, userPassword)
+    const user = users.find((el) => el.user_id === userId)
+    if (!user) { res.status(401).send("---- not signed up") }
+
+    req.session.userId = user.user_id
+    res.send("----good")
 })
 
 app.listen(3000, () => console.log("---- server is on port 3000"))
