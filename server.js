@@ -32,14 +32,29 @@ const sessionOptions = {
 app.use(session(sessionOptions))
 
 app.post("/", (req, res) => {
-    const {userId, userPassword} = req.body
-    
+    const { userId, userPassword } = req.body
+
     // console.log("---- body:", userId, userPassword)
     const user = users.find((el) => el.user_id === userId)
     if (!user) { res.status(401).send("---- not signed up") }
 
     req.session.userId = user.user_id
+    console.log("---- req session:", req.session.userId)
     res.send("----good")
+})
+
+app.get("/", (req, res) => {
+    const user = users.find((el) => el.user_id === req.session.userId)
+    if (!user) res.status(401).send("UNAUTHORIZED ERROR")
+
+    console.log("---- session:", session)
+    res.json(user)
+})
+
+app.delete("/", (req, res) => {
+    req.session.destroy()
+    res.clearCookie("session_id")
+    res.status(200).send("---- logged out")
 })
 
 app.listen(3000, () => console.log("---- server is on port 3000"))
