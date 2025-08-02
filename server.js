@@ -1,7 +1,8 @@
 const express = require("express")
 const cors = require("cors")
 const cookieParser = require("cookie-parser")
-const session = require("express-session")
+// const session = require("express-session")
+const jwt = require("jsonwebtoken")
 
 const users = [
     {
@@ -11,6 +12,8 @@ const users = [
         user_info: "나는야 테스트 유저"
     }
 ]
+
+const secretKey = "some super scret key that must be git ignored"
 
 const app = express()
 app.use(express.json())
@@ -23,13 +26,13 @@ const corsOptions = {
 }
 app.use(cors(corsOptions))
 
-const sessionOptions = {
-    secret: "some long and cool secret key",
-    resave: false,
-    saveUninitialized: false,
-    name: "session_id",
-}
-app.use(session(sessionOptions))
+// const sessionOptions = {
+//     secret: "some long and cool secret key",
+//     resave: false,
+//     saveUninitialized: false,
+//     name: "session_id",
+// }
+// app.use(session(sessionOptions))
 
 app.post("/", (req, res) => {
     const { userId, userPassword } = req.body
@@ -38,17 +41,23 @@ app.post("/", (req, res) => {
     const user = users.find((el) => el.user_id === userId)
     if (!user) { res.status(401).send("---- not signed up") }
 
-    req.session.userId = user.user_id
-    console.log("---- req session:", req.session.userId)
+
+    const accessToken = jwt.sign({ userId: user.user_id }, secretKey, { expiresIn: 1000 * 60 * 10 })
+    console.log("---- access token:", accessToken)
+    res.cookie("accessToken", accessToken)
+    // req.session.userId = user.user_id
+    // console.log("---- req session:", req.session.userId)
     res.send("----good")
 })
 
 app.get("/", (req, res) => {
-    const user = users.find((el) => el.user_id === req.session.userId)
-    if (!user) res.status(401).send("UNAUTHORIZED ERROR")
+    const { accessToken } = req.cookies
+    const payload = jwt.verify(accessToken, secretKey, {})
+    const { userId } = payload
+    const user = users.find((el) => el.user_id === userId)
+    if (!user) { res.status(404).send("---- ERROR: USER NOT FOUND") }
 
-    console.log("---- session:", session)
-    res.json(user)
+    res.status(200).json(user)
 })
 
 app.delete("/", (req, res) => {

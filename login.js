@@ -30,7 +30,7 @@ const hideLogoutButton = () => {
 }
 
 
-const getUser = async () => {
+const getUser = async (req, res) => {
     const response = await axios.get("/")
     const { user_name, user_info } = response
     addPNode("이름", user_name)
