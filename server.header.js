@@ -47,23 +47,25 @@ app.post("/", (req, res) => {
     res.cookie("accessToken", accessToken)
     // req.session.userId = user.user_id
     // console.log("---- req session:", req.session.userId)
-    res.send("----good")
+    res.send(accessToken)
 })
 
 app.get("/", (req, res) => {
-    const { accessToken } = req.cookies
+    const accessToken = req.headers.authorization.split(" ")[1]
     const payload = jwt.verify(accessToken, secretKey, {})
     const { userId } = payload
     const user = users.find((el) => el.user_id === userId)
     if (!user) { res.status(404).send("---- ERROR: USER NOT FOUND") }
-
+    
+    
+    console.log("---- payload:", user)
     res.status(200).json(user)
 })
 
-app.delete("/", (req, res) => {
-    // req.session.destroy()
-    res.clearCookie("accessToken")
-    res.status(200).send("---- logged out")
-})
+// app.delete("/", (req, res) => {
+//     // req.session.destroy()
+//     res.clearCookie("accessToken")
+//     res.status(200).send("---- logged out")
+// })
 
 app.listen(3000, () => console.log("---- server is on port 3000"))
